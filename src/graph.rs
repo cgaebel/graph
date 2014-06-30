@@ -82,7 +82,7 @@ impl<V, E> Graph<V, E> {
 
   /// Returns the number of nodes in the graph.
   pub fn number_of_edges(&self) -> uint {
-    self.edges.iter().flat_map(|(_, es)| es.iter()).count()
+    self.edges.iter().map(|(_, es)| es.len()).fold(0, |x, y| x + y)
   }
 
   #[cfg(test)]
@@ -121,8 +121,8 @@ impl<V, E> Graph<V, E> {
       }
     }
 
-    let num_edges = self.edges.iter().flat_map(|(_, es)| es.iter()).count();
-    let num_rev_edges = self.rev_edges.iter().flat_map(|(_, es)| es.iter()).count();
+    let num_edges = self.edges.iter().map(|(_, es)| es.len()).fold(0, |x, y| x + y);
+    let num_rev_edges = self.rev_edges.iter().map(|(_, es)| es.len()).fold(0, |x, y| x + y);
     assert_eq!(num_edges, num_rev_edges);
   }
 
