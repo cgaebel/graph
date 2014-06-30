@@ -233,6 +233,18 @@ impl<V, E> Graph<V, E> {
     Graph::<V, E>::inner_remove_edge(&mut self.edges, &mut self.rev_edges, from, to)
   }
 
+  /// Removes a vertex and any connected edges from the graph.
+  pub fn remove_vertex(&mut self, v: uint) {
+    let to_remove : Vec<(uint, uint)> =
+      self.edges_to(v).chain(self.edges_from(v)).map(|(a, b, _)| (a, b)).collect();
+
+    for &(from, to) in to_remove.iter() {
+      self.remove_edge(from, to);
+    }
+
+    self.nodes.remove(&v);
+  }
+
   /// Returns None if the graph is acyclic. Otherwise, returns the verticies
   /// of the graph in a linear order such that each node comes before all nodes
   /// to which it has outbound edges.
@@ -423,7 +435,7 @@ fn test_create() {
 
 #[test]
 fn test_add_verticies() {
-  let mut g : Graph<(), ()> = Graph::new();
+  let mut g = Graph::new();
 
   for &x in [1,2,3,4].iter() {
     g.insert_vertex(x, ());
@@ -439,7 +451,7 @@ fn test_add_verticies() {
 
 #[test]
 fn test_insert_directed_edge() {
-  let mut g : Graph<(), ()> = Graph::new();
+  let mut g = Graph::new();
 
   for &x in [1,2,3,4].iter() {
     g.insert_vertex(x, ());
@@ -458,7 +470,7 @@ fn test_insert_directed_edge() {
 
 #[test]
 fn test_edges_to_and_from() {
-  let mut g : Graph<(), uint> = Graph::new();
+  let mut g = Graph::new();
 
   for &x in [1,2,3,4].iter() {
     g.insert_vertex(x, ());
@@ -523,7 +535,7 @@ fn test_edges_to_and_from() {
 
 #[test]
 fn test_tsort() {
-  let mut g : Graph<uint, ()> = Graph::new();
+  let mut g = Graph::new();
 
   for &x in [1,2,3,4,5].iter() {
     g.insert_vertex(x, x*2);
@@ -596,7 +608,7 @@ fn test_tsort() {
 
 #[test]
 fn test_dfs_and_bfs() {
-  let mut g = Graph::<(), ()>::new();
+  let mut g = Graph::new();
 
   for &x in [1,2,3,4,5,6].iter() {
     g.insert_vertex(x, ());
@@ -624,4 +636,23 @@ fn test_dfs_and_bfs() {
     let expected2 = vec!(1,3,2,5,4);
     assert!(actual == expected1 || actual == expected2);
   }
+}
+
+#[test]
+fn test_remove_vertex() {
+  let mut g = Graph::new();
+
+  for &x in [1,2,3,4,5].iter() {
+    g.insert_vertex(x, ());
+  }
+
+  g.insert_directed_edge(3,1,());
+  g.insert_directed_edge(2,3,());
+  g.insert_directed_edge(1,5,());
+  g.insert_directed_edge(5,2,());
+
+  g.remove_vertex(3);
+
+  assert_eq!(g.number_of_edges(), 2);
+  assert_eq!(g.number_of_verticies(), 4);
 }
