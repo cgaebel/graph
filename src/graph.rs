@@ -29,8 +29,10 @@ pub struct Graph<V, E> {
   rev_edges: EdgeMap<E>,
 }
 
+pub type Verticies<'a, V> = hashmap::Entries<'a, uint, V>;
+
 // An iterator through all the nodes connected to a node.
-pub type ConnectsTo<'a, E> =
+pub type Connections<'a, E> =
   iter::Map<'a,
     (uint, (&'a uint, &'a Rc<E>)),
     (uint, uint, Rc<E>),
@@ -66,6 +68,11 @@ impl<V, E> Graph<V, E> {
   pub fn clear_edges(&mut self) {
     self.edges     = HashMap::new();
     self.rev_edges = HashMap::new();
+  }
+
+  /// Returns an iterator over every node in the graph.
+  pub fn verticies<'a>(&'a self) -> Verticies<'a, V> {
+    self.nodes.iter()
   }
 
   #[cfg(test)]
@@ -146,7 +153,7 @@ impl<V, E> Graph<V, E> {
     self.invariant();
   }
 
-  fn inner_edges_from<'a>(edges: &'a EdgeMap<E>, v: uint) -> ConnectsTo<'a, E> {
+  fn inner_edges_from<'a>(edges: &'a EdgeMap<E>, v: uint) -> Connections<'a, E> {
     iter::Repeat::new(v)
       .zip(edges.find(&v).move_iter().flat_map(|m| m.iter()))
       .map(|(v, (&u, e))| (v, u, e.clone()))
@@ -154,11 +161,11 @@ impl<V, E> Graph<V, E> {
 
   /// Returns an iterator through all the nodes connected from `v`. i.e. every
   /// edge for which the source is `v`.
-  pub fn edges_from<'a>(&'a self, v: uint) -> ConnectsTo<'a, E> {
+  pub fn edges_from<'a>(&'a self, v: uint) -> Connections<'a, E> {
     Graph::<V, E>::inner_edges_from(&'a self.edges, v)
   }
 
-  fn inner_edges_to<'a>(rev_edges: &'a EdgeMap<E>, v: uint) -> ConnectsTo<'a, E> {
+  fn inner_edges_to<'a>(rev_edges: &'a EdgeMap<E>, v: uint) -> Connections<'a, E> {
     iter::Repeat::new(v)
       .zip(rev_edges.find(&v).move_iter().flat_map(|m| m.iter()))
       .map(|(u, (&v, e))| (v, u, e.clone()))
@@ -166,7 +173,7 @@ impl<V, E> Graph<V, E> {
 
   /// Returns an iterator through all the edges connected to `v`. i.e. every
   /// edge for which the destination is `v`.
-  pub fn edges_to<'a>(&'a self, v: uint) -> ConnectsTo<'a, E> {
+  pub fn edges_to<'a>(&'a self, v: uint) -> Connections<'a, E> {
     Graph::<V, E>::inner_edges_to(&'a self.rev_edges, v)
   }
 
