@@ -80,9 +80,13 @@ impl<V, E> Graph<V, E> {
     self.nodes.len()
   }
 
+  fn inner_number_of_edges(emap: &EdgeMap<E>) -> uint {
+    emap.iter().map(|(_, es)| es.len()).fold(0, |x,y| x + y)
+  }
+
   /// Returns the number of nodes in the graph.
   pub fn number_of_edges(&self) -> uint {
-    self.edges.iter().map(|(_, es)| es.len()).fold(0, |x, y| x + y)
+    Graph::<V, E>::inner_number_of_edges(&self.edges)
   }
 
   #[cfg(test)]
@@ -121,8 +125,8 @@ impl<V, E> Graph<V, E> {
       }
     }
 
-    let num_edges = self.edges.iter().map(|(_, es)| es.len()).fold(0, |x, y| x + y);
-    let num_rev_edges = self.rev_edges.iter().map(|(_, es)| es.len()).fold(0, |x, y| x + y);
+    let num_edges     = Graph::<V, E>::inner_number_of_edges(&self.edges);
+    let num_rev_edges = Graph::<V, E>::inner_number_of_edges(&self.rev_edges);
     assert_eq!(num_edges, num_rev_edges);
   }
 
