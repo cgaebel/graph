@@ -5,7 +5,7 @@
 
 use std::collections::Deque;
 use std::collections::hashmap;
-use std::collections::hashmap::HashMap;
+use std::collections::hashmap::{HashMap, HashSet};
 use std::collections::ringbuf::RingBuf;
 use std::iter;
 use std::option;
@@ -302,6 +302,113 @@ impl<V, E> Graph<V, E> {
   pub fn is_acyclic(&self) -> bool {
     self.topological_sort().is_some()
   }
+
+  /// Perform a depth-first search starting at the given node.
+  pub fn dfs<'a>(&'a self, starting_node: uint) -> Dfs<'a, V, E> {
+    Dfs {
+      graph:    self,
+      visited:  HashSet::new(),
+      to_visit: vec!(starting_node),
+    }
+  }
+
+  /// Performs a breadth-first search starting at the given node.
+  pub fn bfs<'a>(&'a self, starting_node: uint) -> Bfs<'a, V, E> {
+    let mut to_visit = RingBuf::new();
+    to_visit.push_back(starting_node);
+
+    Bfs {
+      graph:    self,
+      visited:  HashSet::new(),
+      to_visit: to_visit,
+    }
+  }
+}
+
+/// Iterator over the verticies in a depth first search
+pub struct Dfs<'a, V, E> {
+  graph:    &'a Graph<V, E>,
+  visited:  HashSet<uint>,
+  to_visit: Vec<uint>,
+}
+
+impl<'a, V, E> Iterator<(uint, &'a V)> for Dfs<'a, V, E> {
+  fn next(&mut self) -> Option<(uint, &'a V)> {
+    let u;
+
+    loop {
+      match self.to_visit.pop() {
+        None => return None,
+        Some(v) => {
+          if !self.visited.contains(&v) {
+            u = v;
+            break;
+          }
+        }
+      }
+    }
+
+    let v =
+      match self.graph.nodes.find(&u) {
+        None => return None,
+        Some(v) => v
+      };
+
+    self.visited.insert(u);
+
+    for (_, v, _) in self.graph.edges_from(u) {
+      self.to_visit.push(v);
+    }
+
+    Some((u, v))
+  }
+
+  fn size_hint(&self) -> (uint, Option<uint>) {
+    (0, Some(self.graph.number_of_verticies() - self.visited.len()))
+  }
+}
+
+/// Iterator over the verticies in a depth first search
+pub struct Bfs<'a, V, E> {
+  graph:    &'a Graph<V, E>,
+  visited:  HashSet<uint>,
+  to_visit: RingBuf<uint>,
+}
+
+impl<'a, V, E> Iterator<(uint, &'a V)> for Bfs<'a, V, E> {
+  fn next(&mut self) -> Option<(uint, &'a V)> {
+    let u;
+
+    loop {
+      match self.to_visit.pop_front() {
+        None => return None,
+        Some(v) => {
+          if !self.visited.contains(&v) {
+            u = v;
+            break;
+          }
+        }
+      }
+    }
+
+    let v =
+      match self.graph.nodes.find(&u) {
+        None => return None,
+        Some(v) => v
+      };
+
+    self.visited.insert(u);
+
+    for (_, v, _) in self.graph.edges_from(u) {
+      self.to_visit.push_back(v);
+    }
+
+    Some((u, v))
+  }
+
+  fn size_hint(&self) -> (uint, Option<uint>) {
+    (0, Some(self.graph.number_of_verticies() - self.visited.len()))
+  }
 }
 
 #[test]
@@ -480,5 +587,37 @@ fn test_tsort() {
     g.insert_directed_edge(5,1,());
 
     assert!(!g.is_acyclic());
+  }
+}
+
+#[test]
+fn test_dfs_and_bfs() {
+  let mut g = Graph::<(), ()>::new();
+
+  for &x in [1,2,3,4,5,6].iter() {
+    g.insert_vertex(x, ());
+  }
+
+  g.insert_directed_edge(1,2,());
+  g.insert_directed_edge(1,3,());
+  g.insert_directed_edge(2,4,());
+  g.insert_directed_edge(3,5,());
+
+  //            1
+  //          2   3
+  //          4   5
+
+  {
+    let actual : Vec<uint> = g.dfs(1).map(|(x, &())| x).collect();
+    let expected1 = vec!(1,3,5,2,4);
+    let expected2 = vec!(1,2,4,3,5);
+    assert!(actual == expected1 || actual == expected2);
+  }
+
+  {
+    let actual : Vec<uint> = g.bfs(1).map(|(x, &())| x).collect();
+    let expected1 = vec!(1,2,3,4,5);
+    let expected2 = vec!(1,3,2,5,4);
+    assert!(actual == expected1 || actual == expected2);
   }
 }
