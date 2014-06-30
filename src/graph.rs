@@ -75,6 +75,16 @@ impl<V, E> Graph<V, E> {
     self.nodes.iter()
   }
 
+  /// Returns the number of verticies in the graph.
+  pub fn number_of_verticies(&self) -> uint {
+    self.nodes.len()
+  }
+
+  /// Returns the number of nodes in the graph.
+  pub fn number_of_edges(&self) -> uint {
+    self.edges.iter().flat_map(|(_, es)| es.iter()).count()
+  }
+
   #[cfg(test)]
   fn create_directly(vs: Vec<(uint, V)>, es: Vec<(uint, uint, E)>) -> Graph<V, E> {
     let mut g = Graph::new();
@@ -110,6 +120,10 @@ impl<V, E> Graph<V, E> {
         }
       }
     }
+
+    let num_edges = self.edges.iter().flat_map(|(_, es)| es.iter()).count();
+    let num_rev_edges = self.rev_edges.iter().flat_map(|(_, es)| es.iter()).count();
+    assert_eq!(num_edges, num_rev_edges);
   }
 
   #[cfg(not(test))]
