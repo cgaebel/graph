@@ -1,4 +1,7 @@
 language: rust
+env:
+  global:
+    - secure: PFYrKSbMrs20sKWxHD3FGckcdpj/GcSNqmklx1MOf3eVFHg7rTIci6JrexGpm1KifV0gFh9YiakuRZnBRavmI5CTUJ58lvrFc8ps+K73Q+wrTx6ufZopoVz1P8SadeOvGu/nfa4BF8lDWA0hA3UJRZIlnFDNiNmnCUePwIMpLCg=
 install:
   - curl -O http://static.rust-lang.org/dist/rust-nightly-x86_64-unknown-linux-gnu.tar.gz
   - tar xfz rust-nightly-x86_64-unknown-linux-gnu.tar.gz
@@ -9,7 +12,9 @@ install:
 script:
   - cargo build
   - cargo test
-
+  - rustdoc src/graph.rs
+after_script:
+  - curl http://www.rust-ci.org/artifacts/put?t=$RUSTCI_TOKEN | sh
 notifications:
   email:
     - cg.wowus.cg@gmail.com
