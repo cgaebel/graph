@@ -180,7 +180,7 @@ impl<V, E> Graph<V, E> {
   /// Returns an iterator through all the nodes connected from `v`. i.e. every
   /// edge for which the source is `v`.
   pub fn edges_from<'a>(&'a self, v: uint) -> Connections<'a, E> {
-    Graph::<V, E>::inner_edges_from(&'a self.edges, v)
+    Graph::<V, E>::inner_edges_from(&self.edges, v)
   }
 
   fn inner_edges_to<'a>(rev_edges: &'a EdgeMap<E>, v: uint) -> Connections<'a, E> {
@@ -192,7 +192,7 @@ impl<V, E> Graph<V, E> {
   /// Returns an iterator through all the edges connected to `v`. i.e. every
   /// edge for which the destination is `v`.
   pub fn edges_to<'a>(&'a self, v: uint) -> Connections<'a, E> {
-    Graph::<V, E>::inner_edges_to(&'a self.rev_edges, v)
+    Graph::<V, E>::inner_edges_to(&self.rev_edges, v)
   }
 
   /// Returns true iff there are any edges from `v`.
